@@ -3,7 +3,7 @@
 # modified by E. Linck, original wrappers by C.J. Battey   #
 ############################################################
 
-setwd("/home/elinck/syma_wgs")
+setwd("/data/jdumbacher/Syma/syma_wgs/")
 install.packages("magrittr", repo = "http://ftp.osuosl.org/pub/cran/"); install.packages("foreach", repo = "http://ftp.osuosl.org/pub/cran/"); install.packages("doMC", repo = "http://ftp.osuosl.org/pub/cran/")
 library(magrittr);library(foreach);library(doMC)
 registerDoMC(cores=4)
@@ -37,40 +37,44 @@ for(i in commands){
 # spades command here
 
 ################################################################
-# remove duplicate reads (bbmap::dedupe.sh)                    #
+# remove duplicate reads (bbmap::dedupe.sh; memory intensive   #
 ################################################################
 
 R1 <- list.files("/data/jdumbacher/Syma/syma_wgs/trimmed",full.names=T) %>% grep("pair1",.,value=T)
 R2 <- list.files("/data/jdumbacher/Syma/syma_wgs/trimmed",full.names=T) %>% grep("pair2",.,value=T)
-sampleID <- basename(R1[i]) %>% strsplit("_L006_R._001") %>% unlist() %>% .[1]
 commands <- c()
 for(i in 1:20){
+  sampleID[i] <- basename(R1[i]) %>% strsplit("_S...pair1.truncated") %>% unlist() %>% .[1]
   commands[i] <- paste0("dedupe.sh", 
-                        "in1=", R1[i], 
-                        "in2=", R2[i],
-                        "out1=", sampleID[i], "R1.dedup.fq",
-                        "out2=", sampleID[i], "R2.dedup.fq",
-                        "ac=f",
-                        "t=30")
+                        " in1=", R1[i], 
+                        " in2=", R2[i],
+                        " out=", sampleID[i], ".dedup.fq",
+                        " ac=f",
+                        " t=30;",
+                        " reformat.sh in=", sampleID[i], ".dedup.fq", 
+                        " out1=", sampleID[i], "_R1.dedup.fq",
+                        " out2=", sampleID[i], "_R2.dedup.fq")
 }
 for(i in 1:20){
   system(commands[i])
 }
 
+system("mkdir dedup; mv *dedup* dedup")
+
 ################################################################
 # align trimmed reads to reference sample                      #
 ################################################################
-
-R1 <- list.files("/data/jdumbacher/Syma/syma_wgs/trimmed",full.names=T) %>% grep("R1.dedup",.,value=T)
-R2 <- list.files("/data/jdumbacher/Syma/syma_wgs/trimmed",full.names=T) %>% grep("R2.dedup",.,value=T)
+R1 <- list.files("/data/jdumbacher/Syma/syma_wgs/dedup",full.names=T) %>% grep("R1.dedup",.,value=T)
+R2 <- list.files("/data/jdumbacher/Syma/syma_wgs/dedup",full.names=T) %>% grep("R2.dedup",.,value=T)
 commands <- c()
 for(i in 1:20){
   commands[i] <- paste0("bbmap.sh",
-                        "in1=", R1[i], 
-                        "in2=", R2[i],
-                        "minratio=0.1",
-                        "t=48",
-                        "bamscript=bs.sh; sh bs.sh")
+                        " in1=", R1[i], 
+                        " in2=", R2[i],
+                        " vslow",
+                        " minratio=0.1",
+                        " t=48",
+                        " bamscript=bs.sh; sh bs.sh")
 }
 for(i in 1:20){
   system(commands[i])
