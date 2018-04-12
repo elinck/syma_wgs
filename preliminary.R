@@ -2,12 +2,11 @@ setwd("~/Dropbox/syma_wgs")
 
 library(vcfR);library(adegenet);library(ggplot2);
 library(ape);library(strataG);library(data.table);
-library(pcadapt);library("qvalue");
-library("OutFLANK");library("ggplot2")
-library(vcfR);library(PopGenome)
-library(plyr)
+library(pcadapt);library("qvalue");library("OutFLANK");
+library("ggplot2");library(vcfR);library(PopGenome)
+library(plyr);library(ape);library(ggtree)
 
-#50% 
+#50% complete matrix
 syma50 <- read.vcfR("syma.50.recode.vcf")
 
 # 75% complete matrix
@@ -74,6 +73,12 @@ plot(nj(d2))
 plot(upgma(d))
 plot(upgma(d2))
 
+# read svd quartets species tree 
+source("https://bioconductor.org/biocLite.R")
+biocLite("ggtree")
+library("ggtree")
+
+
 # convert vcf to pcadapt
 pcadapt::vcf2pcadapt("syma.raw.scan.recode.vcf", "pcadapt.snps")
 snps <- read.table("pcadapt.snps", head = TRUE)
@@ -81,7 +86,7 @@ snps <- read.pcadapt(snps)
 x <- pcadapt(snps)
 pop <- c(1,1,1,2,2,2,2,1,2,2,2,1,1,1,2,2,1,2,1,1)
 plot(x, option = "scores", pop = pop)
-plot(x , option = "manhattan", pop = pop, )
+plot(x , option = "manhattan")
 
 #save pval obj
 pval <- x$pvalues
@@ -89,7 +94,7 @@ pval <- x$pvalues
 #better manhattan plot
 ggdf <- as.data.frame(cbind(as.vector(-log10(pval)), c(1:length(pval))))
 colnames(ggdf) <- c("pval", "position")
-png(width=6,height=1.5,units="in",res=600,file="manhattan.png")
+pdf(width=6,height=1.5,file="manhattan.pdf")
 ggplot(ggdf,aes(x=position,y=pval))+theme_bw()+
   theme(legend.position="none",
         panel.grid = element_blank(),
@@ -182,4 +187,20 @@ estimates_i <- jaatha(i_sim, i_empirical,
 estimates_hybrid$loglikelihood #[1] -3000.998
 estimates_im$loglikelihood #[1] -2136.74
 estimates_i$loglikelihood #[1] -3008.813
+
+#plot phylogenies
+mtdna <- read.tree("syma_mtDNA_14k.tre")
+nuc <- read.tree("syma_species_tree.tre")
+nuc <- root(nuc, outgroup = "ochracea", resolve.root = TRUE)
+
+ggtree(nuc) +
+  geom_tiplab(size=5, color="purple")
+
+pdf("mtdna.tree.pdf")
+plot(mtdna, use.edge.length = FALSE)
+dev.off()
+
+pdf("species.tree.pdf")
+plot(nuc)
+dev.off()
 

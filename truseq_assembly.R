@@ -68,15 +68,18 @@ R1 <- list.files("/data/jdumbacher/Syma/syma_wgs/dedup",full.names=T) %>% grep("
 R2 <- list.files("/data/jdumbacher/Syma/syma_wgs/dedup",full.names=T) %>% grep("R2.dedup",.,value=T)
 commands <- c()
 for(i in 1:20){
+  sampleID[i] <- basename(R1[i]) %>% strsplit("R..dedup") %>% unlist() %>% .[1]
   commands[i] <- paste0("bbmap.sh",
                         " in1=", R1[i], 
                         " in2=", R2[i],
+                        " out=", sampleID[i],".sam",
                         " vslow",
                         " minratio=0.1",
                         " t=48",
-                        " bamscript=bs.sh; sh bs.sh")
+                        " bamscript=bs.sh; sh bs.sh;")
 }
 for(i in 1:20){
   system(commands[i])
 }
+
 
