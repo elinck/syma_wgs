@@ -9,7 +9,8 @@ library(magrittr);library(foreach);library(doMC)
 registerDoMC(cores=4)
 
 #######################################################################################
-# setup: you'll need R, java (v1.8), samtools, AdapterRemoval; bbmap; and angsd       #
+# setup: you'll need R, java (v1.8), samtools, AdapterRemoval; bbmap; NextGenMap;     #
+# and angsd                                                                           #
 # Budget around 5x the initial download size for hard drive space                     #
 #######################################################################################
 
@@ -28,13 +29,6 @@ for(i in commands){
   system(i)
 }
 #foreach(i=commands) %dopar% system(i) #untested parallel version
-
-################################################################
-# assemble reference sample                                    #
-# ELA_S largest file (shrug)                                   #
-################################################################
-
-# spades command here
 
 ################################################################
 # remove duplicate reads (bbmap::dedupe.sh; memory intensive   #
@@ -67,19 +61,53 @@ system("mkdir dedup; mv *dedup* dedup")
 R1 <- list.files("/data/jdumbacher/Syma/syma_wgs/dedup",full.names=T) %>% grep("R1.dedup",.,value=T)
 R2 <- list.files("/data/jdumbacher/Syma/syma_wgs/dedup",full.names=T) %>% grep("R2.dedup",.,value=T)
 commands <- c()
+sampleID <- c()
 for(i in 1:20){
-  sampleID[i] <- basename(R1[i]) %>% strsplit("R..dedup") %>% unlist() %>% .[1]
-  commands[i] <- paste0("bbmap.sh",
-                        " in1=", R1[i], 
-                        " in2=", R2[i],
-                        " out=", sampleID[i],".sam",
-                        " vslow",
-                        " minratio=0.1",
-                        " t=48",
-                        " bamscript=bs.sh; sh bs.sh;")
+  sampleID[i] <- basename(R1[i]) %>% strsplit("_R..dedup") %>% unlist() %>% .[1]
+  commands[i] <- paste0("ngm -r /data/jdumbacher/Syma/syma_wgs/halcyon_senegalensis/B10K-DU-024-03.genomic.fa", #change this to your reference
+                        " -1 ", R1[i], 
+                        " -2 ", R2[i],
+                        " -o ", sampleID[i],".sam",
+                        " -t 48")
 }
 for(i in 1:20){
   system(commands[i])
 }
 
+################################################################
+# sort files                                                   #
+################################################################
+sams <- list.files("/data/jdumbacher/Syma/syma_wgs/alignments",full.names=T)
+commands <- c()
+sampleID <- c()
+for(i in 1:length(sams)){
+  sampleID[i] <- basename(sams[i]) %>% strsplit(".sam") %>% unlist() %>% .[1] 
+  commands[i] <-paste0("picard SortSam",
+                      " I=", sams[i], 
+                      " O=", sampleID[i],
+                      ".bam",
+                      " SORT_ORDER=coordinate")
+}
+
+for(i in 1:length(sams)){
+  system(commands[i])
+}
+
+################################################################
+# index files                                                 #
+################################################################
+bams <- list.files("/data/jdumbacher/Syma/syma_wgs/alignments",full.names=T) %>% grep("bam",.,value=T)
+commands <- c()
+sampleID <- c()
+for(i in 1:length(bams)){
+  sampleID[i] <- basename(bams[i]) %>% strsplit(".bam") %>% unlist() %>% .[1] 
+  commands[i] <-paste0("samtools index -b ",
+                       bams[i], 
+                       " ", sampleID[i],
+                       ".bam.bai")
+}
+
+for(i in 1:length(bams)){
+  system(commands[i])
+}
 
