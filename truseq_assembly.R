@@ -111,3 +111,25 @@ for(i in 1:length(bams)){
   system(commands[i])
 }
 
+################################################################
+# AddOrReplaceReadGroups                                       #
+################################################################
+bams <- list.files("/data/jdumbacher/Syma/syma_wgs/alignments",full.names=T) %>% grep(".bam$",.,value=T) #$ indicates end of line to avoid .bai files
+commands <- c()
+sampleID <- c()
+for(i in 1:length(bams)){
+  sampleID[i] <- basename(bams[i]) %>% strsplit(".bam") %>% unlist() %>% .[1] 
+  commands[i] <-paste0("picard AddOrReplaceReadGroups",
+                       " I=", bams[i],
+                       " O=", sampleID[i],"_RG.bam",
+                       " R=/data/jdumbacher/Syma/syma_wgs/halcyon_senegalensis/B10K-DU-024-03.genomic.fa",
+                       " RGID=1",
+                       " RGLB=syma",
+                       " RGPL=illumina",
+                       " RGPU=pool1",
+                       " RGSM=",sampleID[i])
+}
+
+for(i in 1:length(bams)){
+  system(commands[i])
+}
