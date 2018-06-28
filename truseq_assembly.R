@@ -146,4 +146,7 @@ for(i in 1:length(bams)){
 for(i in 1:length(bams)){
   system(commands[i])
 }
+<<<<<<< HEAD
+>>>>>>> 1955fde93aea75718a6d3de1f71dbe57da83166d
+=======
 >>>>>>> 1955fde93aea75718a6d3de1f71dbe57da83166d
