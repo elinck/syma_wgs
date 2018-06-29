@@ -55,7 +55,7 @@ for(i in 1:length(R1)){
                         " in2=", R2[i],
                         " out=", R1[i] %>% basename() %>% strsplit(".clean.fq") %>% unlist() %>% .[1], ".sam",
                         " ref=masked.ref.fa", 
-                        " vslow minratio=0.1 k=8 maxindel=200 bamscript=bs.sh; sh bs.sh")
+                        " vslow minratio=0.1 k=8 maxindel=200 bamscript=bs.sh >> alignment_log.txt 2>&1; sh bs.sh ")
 }
 for(i in commands){
   system(i)
