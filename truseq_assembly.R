@@ -44,39 +44,20 @@ for(i in commands){
 }
 system("mkdir syma_cleaned; mv *clean* syma_cleaned")
 
-# contamination check
-reads <- list.files("/media/burke/bigMac/ethan/syma_cleaned",full.names = T)
-outnames <- reads %>% tools::file_path_sans_ext() %>% tools::file_path_sans_ext() %>% basename()
-for(i in 1:length(reads)){
-  commands[i] <- paste0("echo ",reads[i]," >> contam_alignment_log.txt 2>&1;",
-                        "bowtie2 -p 4",
-                        " -x /media/burke/bigMac/ethan/contaminant_ref_seq/contam_ref",
-                        " -U ",reads[i],
-                        " -S tmp.sam",
-                        " --un ",outnames[i],".filtered.fq",
-                        " >> contam_alignment_log.txt 2>&1;",
-                        
-                        "gzip ",outnames[i],".fq;"
-  )
-}
-for(i in commands){
-  system(i)
-}
-
 system("rm tmp.sam")
 system("mkdir syma_filtered; mv *filtered* syma_filtered")
 
 # align trimmed reads to reference sample
-R1 <- list.files("/data/jdumbacher/Syma/syma_wgs/syma_filtered",full.names=T) %>% grep("R1",.,value=T)
-R2 <- list.files("/data/jdumbacher/Syma/syma_wgs/syma_filtered",full.names=T) %>% grep("R2",.,value=T)
+R1 <- list.files("/media/burke/bigMac/ethan/syma_trimmed",full.names=T) %>% grep("R1",.,value=T)
+R2 <- list.files("/media/burke/bigMac/ethan/syma_trimmed",full.names=T) %>% grep("R2",.,value=T)
 commands <- c()
 sampleID <- c()
 for(i in 1:length(R1)){
   commands[i] <- paste0("bbmap.sh", 
                         " in1=", R1[i], 
                         " in2=", R2[i],
-                        " out=", R1[i] %>% basename() %>% strsplit("R..filtered.fq") %>% unlist() %>% .[1], ".sam",
-                        " ref=ref.masked.fa", 
+                        " out=", R1[i] %>% basename() %>% strsplit(".clean.fq") %>% unlist() %>% .[1], ".sam",
+                        " ref=masked.ref.fa", 
                         " vslow minid=0 k=11 maxindel=200; bamscript=bs.sh; sh bs.sh")
 }
 for(i in commands){
