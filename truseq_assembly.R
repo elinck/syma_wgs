@@ -44,12 +44,9 @@ for(i in commands){
 }
 system("mkdir syma_cleaned; mv *clean* syma_cleaned")
 
-system("rm tmp.sam")
-system("mkdir syma_filtered; mv *filtered* syma_filtered")
-
 # align trimmed reads to reference sample
-R1 <- list.files("/media/burke/bigMac/ethan/syma_trimmed",full.names=T) %>% grep("R1",.,value=T)
-R2 <- list.files("/media/burke/bigMac/ethan/syma_trimmed",full.names=T) %>% grep("R2",.,value=T)
+R1 <- list.files("/media/burke/bigMac/ethan/syma_cleaned",full.names=T) %>% grep("R1",.,value=T)
+R2 <- list.files("/media/burke/bigMac/ethan/syma_cleaned",full.names=T) %>% grep("R2",.,value=T)
 commands <- c()
 sampleID <- c()
 for(i in 1:length(R1)){
@@ -58,7 +55,7 @@ for(i in 1:length(R1)){
                         " in2=", R2[i],
                         " out=", R1[i] %>% basename() %>% strsplit(".clean.fq") %>% unlist() %>% .[1], ".sam",
                         " ref=masked.ref.fa", 
-                        " vslow minid=0 k=11 maxindel=200; bamscript=bs.sh; sh bs.sh")
+                        " vslow minratio=0.1 k=8 maxindel=200 bamscript=bs.sh; sh bs.sh")
 }
 for(i in commands){
   system(i)
