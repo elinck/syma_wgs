@@ -1,7 +1,10 @@
 ##estimate SFS per species with angsd
 
+#rename files
+for file in /data/jdumbacher/Syma/syma_wgs/bad_bams/sorted/*; do read line;  mv -v "${file}" "${line}";  done < /data/jdumbacher/Syma/syma_wgs/bad_bams/rename.txt
+
 angsd -b /data/jdumbacher/Syma/syma_wgs/megarhyncha.txt -anc /data/jdumbacher/Syma/syma_wgs/ELA_S/ELA_S.fasta \
--dosaf 1 -gl 1 -P 30 -doMajorMinor 1 -doMAF 1 -SNP_pval 1e-2 -out megarhyncha \
+-dosaf 1 -gl 1 -P 30 -doMajorMinor 1 -doMAF 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-2 -out megarhyncha \
  
 angsd -b /data/jdumbacher/Syma/syma_wgs/torotoro.txt -anc /data/jdumbacher/Syma/syma_wgs/ELA_S/ELA_S.fasta \
 -dosaf 1 -gl 1 -P 30 -doMajorMinor 1 -doMAF 1 -SNP_pval 1e-2 -out torotoro \
