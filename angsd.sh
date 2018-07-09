@@ -1,24 +1,42 @@
-##estimate SFS per species with angsd
+### create bamlists
 
-#rename files
-for file in /data/jdumbacher/Syma/syma_wgs/bad_bams/sorted/*; do read line;  mv -v "${file}" "${line}";  done < /data/jdumbacher/Syma/syma_wgs/bad_bams/rename.txt
+ls -1 *mega_R1.sam > megarhyncha.txt
+ls -1 *toro_R1.sam > torotoro.txt
+ls -1 *ochr_R1.sam > ochracea.txt
+ls -1 ochr_R1.bam > ochracea.txt
 
-angsd -b /data/jdumbacher/Syma/syma_wgs/megarhyncha.txt -anc /data/jdumbacher/Syma/syma_wgs/ELA_S/ELA_S.fasta \
--dosaf 1 -gl 1 -P 30 -doMajorMinor 1 -doMAF 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-2 -out megarhyncha \
+
+### estimate SFS per species with angsd
+
+angsd -b /media/burke/bigMac/ethan/alignment/megarhyncha.txt -anc /media/burke/bigMac/ethan/masked.ref.fa \
+-dosaf 1 -gl 1 -P 16 -doMajorMinor 1 -doMAF 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-2 -out megarhyncha \
  
-angsd -b /data/jdumbacher/Syma/syma_wgs/torotoro.txt -anc /data/jdumbacher/Syma/syma_wgs/ELA_S/ELA_S.fasta \
--dosaf 1 -gl 1 -P 30 -doMajorMinor 1 -doMAF 1 -SNP_pval 1e-2 -out torotoro \
+angsd -b /media/burke/bigMac/ethan/alignment/torotoro.txt -anc /media/burke/bigMac/ethan/masked.ref.fa \
+-dosaf 1 -gl 1 -P 16 -doMajorMinor 1 -doMAF 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-2 -out torotoro \
+
+### get 2-d SFS prior
+realSFS megarhyncha.saf.idx torotoro.saf.idx -P 16 > meg_tor.ml
  
-##get 2-d SFS prior (needs >150gb RAM)
-~/angsd/misc/realSFS megarhyncha.saf.idx torotoro.saf.idx -P 32 > meg_tor.ml
+### estimate Fst by SNP
+realSFS fst index megarhyncha.saf.idx torotoro.saf.idx -sfs meg_tor.ml \
+-P 16 -fstout meg_tor
  
-##estimate Fst by SNP
-~/angsd/misc/realSFS fst index megarhyncha.saf.idx torotoro.saf.idx -sfs meg_tor.ml \
--P 32 -fstout meg_tor
+### global Fst
+~/angsd/misc/realSFS fst stats meg_tor.fst.idx -P 16
  
-##global Fst
-~/angsd/misc/realSFS fst stats meg_tor.fst.idx -P 32
- 
-##sliding-window Fst
-~/angsd/misc/realSFS fst stats2 meg_tor.fst.idx -P 32 -win 50000 \
+### sliding-window Fst
+realSFS fst stats2 meg_tor.fst.idx -P 16 -win 50000 \
 -step 10000 > ../meg_tor_fstwindow.txt
+
+### sliding-window Tajima's D
+
+angsd -bam all_bams.txt -doSaf 1 -anc /media/burke/bigMac/ethan/masked.ref.fa -GL 1 -P 24 -out global 
+
+ealSFS out.saf.idx -P 24 > global.sfs
+
+angsd -bam all_bams.txt -out global -doThetas 1 -doSaf 1 -pest out.sfs -anc /media/burke/bigMac/ethan/masked.ref.fa -GL 1
+
+thetaStat do_stat global.thetas.idx
+
+thetaStat do_stat out.thetas.idx -win 50000 -step 10000  -outnames theta.thetasWindow.gz
+
