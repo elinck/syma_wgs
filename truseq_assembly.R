@@ -60,6 +60,12 @@ for(i in 1:length(R1)){
 for(i in commands){
   system(i)
 }
+
+### vcftools commands
 system("mkdir syma_alignment; mv *am* syma_alignment")
 
+system("callvariants.sh multisample=t list=/home/ubuntu/bamlist.txt vcf=syma prefilter=t ploidy=2 covpenalty=0.5 ref=/home/ubuntu/masked.ref.fa")
 
+system("vcftools --vcf syma.vcf --max-missing 0.75 --minDP 3 --minQ 30 --recode --recode-INFO-all --out syma.raw.75p.d3.vcf") #'After filtering, kept 96815280 out of a possible 111182709 Sites'
+
+system("vcftools --vcf syma.raw.75p.d3.recode.vcf --missing-indv")
