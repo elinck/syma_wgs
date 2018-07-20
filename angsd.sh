@@ -21,10 +21,10 @@ realSFS fst index megarhyncha.saf.idx torotoro.saf.idx -sfs meg_tor.ml \
  
 ### global Fst
 realSFS fst stats meg_tor.fst.idx -P 16 > global_fst.txt
- 
+
 ### sliding-window Fst
 realSFS fst stats2 meg_tor.fst.idx -P 16 -win 50000 \
--step 10000 > ../meg_tor_fstwindow.txt
+-step 50000 > meg_tor_fstwindow.txt
 
 angsd -bam all_bams.txt -doSaf 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-2 \
 -anc /home/ubuntu/masked.ref.fa -GL 1 -P 24 -out syma_spp 
@@ -43,9 +43,10 @@ angsd -bam all_bams.txt -doSaf 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-2 \
 thetaStat do_stat new_syma.thetas.idx -win 50000 -step 50000 \
 -outnames syma.theta_windows.gz
 
-### call genotypes on full dataset, 75% complete matrix 
-angsd -bam combined_bams.txt -anc /home/ubuntu/masked.ref.fa -minQ 20 \
--fold 1 -out syma_angsd_snps_75p  -GL 1  -doGeno 2  -doPost 1  -postCutoff 0.95 \
--doCounts 1 -doGlf 2 -geno_minDepth 5 -SNP_pval 0.05 -minMaf 0.025 \
--doMaf 2 -doMajorMinor 1 -doSaf 1 -doPlink 2 -minInd 30 -P 24
+### windowed pi, dxy, etc
+ngsStat -npop 2 -postfiles /media/burke/bigMac/ethan/download/megarhyncha.saf \
+/media/burke/bigMac/ethan/download/torotoro.saf -nsites 1137737933 -iswin 1 -nind 9 9 \
+-outfile meg_tor.stat -verbose 0 -block_size 50000
+
+
 
