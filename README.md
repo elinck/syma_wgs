@@ -1,6 +1,6 @@
 # Assembly and analysis of WGS data from museum specimens
 
-Working repository. 
+Now deprecated; analyses moved to https://github.com/elinck/syma_genomics
 
 **truseq_assembly.R**: R wrapper for adapter trimming, duplicate removal, and alignment of fastq files.   
    
